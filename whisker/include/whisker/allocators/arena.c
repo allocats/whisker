@@ -35,7 +35,7 @@ static inline void free_block(ArenaBlock* block) {
     free(block);
 }
 
-inline void* arena_alloc(Arena* arena, size_t size) {
+inline void* arena_alloc(ArenaAllocator* arena, size_t size) {
     size = align_size(size);
 
     if (UNLIKELY(arena -> end == NULL && arena -> start == NULL)) {
@@ -62,7 +62,7 @@ inline void* arena_alloc(Arena* arena, size_t size) {
     return result;
 }
 
-void* arena_realloc(Arena* arena, void* ptr, size_t old_size, size_t new_size) {
+void* arena_realloc(ArenaAllocator* arena, void* ptr, size_t old_size, size_t new_size) {
     if (UNLIKELY(new_size <= old_size)) {
         return ptr;
     }
@@ -155,7 +155,7 @@ void* arena_memcpy(void* dest, const void* src, size_t len) {
     return dest;
 }
 
-char* arena_strdup(Arena* arena, const char* str) {
+char* arena_strdup(ArenaAllocator* arena, const char* str) {
     size_t len = strlen(str);
     char* duplicate = (char*) arena_alloc(arena, len + 1);
 
@@ -165,14 +165,14 @@ char* arena_strdup(Arena* arena, const char* str) {
     return duplicate;
 }
 
-inline void arena_reset(Arena* arena) {
+inline void arena_reset(ArenaAllocator* arena) {
     for (ArenaBlock* block = arena -> start; block != NULL; block = block -> next) {
         block -> usage = 0;
     }
     arena -> end = arena -> start;
 }
 
-void arena_free(Arena* arena) {
+void arena_free(ArenaAllocator* arena) {
     ArenaBlock* block = arena -> start;
 
     while (block != NULL) {
@@ -185,7 +185,7 @@ void arena_free(Arena* arena) {
     arena -> end = NULL;
 }
 
-size_t total_capacity(Arena* arena) {
+size_t total_capacity(ArenaAllocator* arena) {
     ArenaBlock* current = arena -> start;
     size_t total = 0;
 
@@ -197,7 +197,7 @@ size_t total_capacity(Arena* arena) {
     return total;
 }
 
-size_t total_usage(Arena* arena) {
+size_t total_usage(ArenaAllocator* arena) {
     ArenaBlock* current = arena -> start;
     size_t total = 0;
 

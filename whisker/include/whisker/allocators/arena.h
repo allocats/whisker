@@ -38,19 +38,19 @@ typedef struct ArenaBlock {
 typedef struct {
     ArenaBlock* start;
     ArenaBlock* end;
-} Arena;
+} ArenaAllocator;
 
-void* arena_alloc(Arena* arena, size_t size);
-void* arena_realloc(Arena* arena, void* ptr, size_t old_size, size_t new_size);
+void* arena_alloc(ArenaAllocator* arena, size_t size);
+void* arena_realloc(ArenaAllocator* arena, void* ptr, size_t old_size, size_t new_size);
 void* arena_memset(void* ptr, int value, size_t len);
 void* arena_memcpy(void* dest, const void* src, size_t len);
-char* arena_strdup(Arena* arena, const char* str);
+char* arena_strdup(ArenaAllocator* arena, const char* str);
 
-void arena_reset(Arena* arena);
-void arena_free(Arena* arena); 
+void arena_reset(ArenaAllocator* arena);
+void arena_free(ArenaAllocator* arena); 
 
-size_t total_capacity(Arena* arena);
-size_t total_usage(Arena* arena); 
+size_t total_capacity(ArenaAllocator* arena);
+size_t total_usage(ArenaAllocator* arena); 
 
 #ifdef __cplusplus 
 }
