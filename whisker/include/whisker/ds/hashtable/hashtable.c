@@ -5,16 +5,15 @@
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 
 static inline uint32_t hash_key(void* ptr, size_t n) {
     char* p = (char*) ptr;
-    uint32_t hash = 2166136261u;
+    uint32_t hash = 5381;
     
     for (size_t i = 0; i < n; i++) {
-        hash ^= *p++;
-        hash *= 16777619u;
+        hash = ((hash << 5) + hash) ^ p[i];
     }
 
     return hash;
@@ -30,18 +29,36 @@ HashTable* create_hashtable(size_t key_size, size_t value_size, size_t capacity)
 
     capacity = capacity == 0 ? HT_DEFAULT_CAPACITY : align_capacity(capacity);
     HashTable* ht = malloc(sizeof(*ht));
-    if (UNLIKELY(!ht)) {
+    if (!ht) {
         return NULL;
     }
 
-    size_t size = ((sizeof(HashItem) + key_size + value_size - (sizeof(void*) * 2)) * capacity) / sizeof(uintptr_t);
-    init_arena(&ht -> allocator, size);
+    size_t item_size = sizeof(HashItem) + key_size + value_size - (2 * sizeof(void*));
+    size_t total_items_size = capacity * item_size;
+    size_t total_size = total_items_size + sizeof(HashItem*) * capacity;
+    
+    init_arena(&ht -> allocator, total_size);
 
     ht -> items = arena_alloc(&ht -> allocator, capacity * sizeof(HashItem*));
-    if (UNLIKELY(!ht -> items)) {
+    if (!ht -> items) {
         arena_free(&ht -> allocator);
         free(ht);
         return NULL;
+    }
+
+    HashItem* items_block = arena_alloc(&ht -> allocator, total_items_size);
+    if (!items_block) {
+        arena_free(&ht -> allocator);
+        free(ht);
+        return NULL;
+    }
+    
+    for (size_t i = 0; i < capacity; i++) {
+        ht -> items[i] = (HashItem*)((char*)items_block + i * item_size);
+        ht -> items[i] -> key = (char*)ht -> items[i] + sizeof(HashItem);
+        ht -> items[i] -> value = (char*)ht -> items[i] -> key + key_size;
+        ht -> items[i] -> next = NULL; 
+        ht -> items[i] -> hash = 0;
     }
 
     ht -> key_size = key_size;
@@ -53,7 +70,7 @@ HashTable* create_hashtable(size_t key_size, size_t value_size, size_t capacity)
 }
 
 void destroy_hashtable(HashTable* ht) {
-    if (LIKELY(ht != NULL)) {
+    if (ht) {
         arena_free(&ht -> allocator);
         free(ht);
         ht = NULL;
@@ -97,9 +114,11 @@ void print_ht(HashTable* ht) {
     for (size_t i = 0; i < ht -> capacity; i++) {
         HashItem* item = ht -> items[i];
 
-        printf("Node %zu:\n", i);
-        printf("  Address: %p\n", item);
-        printf("  Key: %p\n", item -> key);
-        printf("  Value: %p\n\n", item -> value);
+        if (item -> hash != 0) {
+            printf("Node %zu\n", i);
+            printf("  Address: %p\n", item);
+            printf("  Key: %p\n", item -> key);
+            printf("  Value: %p\n\n", item -> value);
+        }
     }
 }
