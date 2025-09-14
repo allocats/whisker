@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void pool_free_all(PoolAllocator* pool) {
+void pool_reset(PoolAllocator* pool) {
     if (!pool) {
         return;
     }
@@ -34,7 +34,7 @@ void pool_init(PoolAllocator* pool, size_t elem_size, size_t n) {
     pool -> memory = malloc(pool -> capacity);
     assert(pool -> memory);
 
-    pool_free_all(pool);
+    pool_reset(pool);
 }
 
 void* pool_alloc(PoolAllocator* pool) {

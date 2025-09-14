@@ -12,8 +12,15 @@ static inline size_t align_size(size_t size) {
     return (size + sizeof(void*) - 1) & ~(sizeof(void*) - 1);
 }
 
-static __attribute__((noinline)) ArenaBlock* new_block(size_t size) {
-    size_t capacity = DEFAULT_CAPACITY;
+inline void init_arena(ArenaAllocator* arena, size_t default_capacity) {
+    assert(arena);
+    arena -> start = NULL;
+    arena -> end = NULL;
+    arena -> default_capacity = default_capacity == 0 ? ARENA_DEFAULT_CAPACITY : align_size(default_capacity);
+}
+
+static __attribute__((noinline)) ArenaBlock* new_block(size_t default_capacity, size_t size) {
+    size_t capacity = default_capacity;
 
     while (UNLIKELY(size > capacity * sizeof(uintptr_t))) {
         capacity *= 2;
@@ -39,7 +46,7 @@ inline void* arena_alloc(ArenaAllocator* arena, size_t size) {
     size = align_size(size);
 
     if (UNLIKELY(arena -> end == NULL && arena -> start == NULL)) {
-        arena -> end = new_block(size);
+        arena -> end = new_block(arena -> default_capacity, size);
         arena -> start = arena -> end;
 
         void* result = (char*) arena -> end -> data + arena -> end -> usage;
@@ -52,7 +59,7 @@ inline void* arena_alloc(ArenaAllocator* arena, size_t size) {
     } 
 
     if (UNLIKELY(arena -> end -> usage + size > arena -> end -> capacity)) {
-            ArenaBlock* block = new_block(size);
+            ArenaBlock* block = new_block(arena -> default_capacity, size);
             arena -> end -> next = block;
             arena -> end = block;
     }

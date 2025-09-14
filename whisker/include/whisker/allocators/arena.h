@@ -20,7 +20,7 @@ extern "C" {
 #include <stdint.h>
 #include <stdlib.h>
 
-#define DEFAULT_CAPACITY (4 * 1024) 
+#define ARENA_DEFAULT_CAPACITY (4 * 1024) 
 
 #define arena_array(arena, type, count) \
     (type*) arena_alloc(arena, sizeof(type) * (count)) 
@@ -38,7 +38,10 @@ typedef struct ArenaBlock {
 typedef struct {
     ArenaBlock* start;
     ArenaBlock* end;
+    size_t default_capacity;
 } ArenaAllocator;
+
+void init_arena(ArenaAllocator* arena, size_t default_capacity);
 
 void* arena_alloc(ArenaAllocator* arena, size_t size);
 void* arena_realloc(ArenaAllocator* arena, void* ptr, size_t old_size, size_t new_size);

@@ -20,6 +20,6 @@ void pool_destroy(PoolAllocator* pool);
 
 void* pool_alloc(PoolAllocator* pool);
 void pool_free(PoolAllocator* pool, void* ptr);
-void pool_free_all(PoolAllocator* pool);
+void pool_reset(PoolAllocator* pool);
 
 #endif // !POOL_H
