@@ -12,7 +12,7 @@
 
 #define AVX2_CHUNK(p, n) (p + (32 * n))
 
-void* arena_realloc_avx2(ArenaAllocator* arena, void* ptr, size_t old_size, size_t new_size) {
+void* arena_realloc_avx2(ArenaAllocator* arena, void* ptr, const size_t old_size, const size_t new_size) {
     if (UNLIKELY(new_size <= old_size)) {
         return ptr;
     }
@@ -65,8 +65,8 @@ void* arena_realloc_avx2(ArenaAllocator* arena, void* ptr, size_t old_size, size
         copy_size -= 32;
     }
 
+    const __m256i zeros = _mm256_setzero_si256();
     size_t zero_size = new_size - old_size;
-    __m256i zeros = _mm256_setzero_si256();
     while (zero_size >= 128) {
         _mm256_store_si256((__m256i*) AVX2_CHUNK(new_ptr, 0), zeros);
         _mm256_store_si256((__m256i*) AVX2_CHUNK(new_ptr, 1), zeros);
@@ -109,9 +109,9 @@ void* arena_realloc_avx2(ArenaAllocator* arena, void* ptr, size_t old_size, size
     return result;
 }
 
-void* arena_memset_avx2(void* ptr, int value, size_t len) {
+void* arena_memset_avx2(void* ptr, const int value, size_t len) {
     char* p = (char*) ptr;
-    char char_value = (char) value;
+    const char char_value = (char) value;
 
     while (len > 0 && ((uintptr_t) p & 31)) {
         *p++ = char_value;

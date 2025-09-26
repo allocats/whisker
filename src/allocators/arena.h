@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 #include <stdint.h>
-#include <stdlib.h>
+#include <stddef.h>
 
 #define ARENA_DEFAULT_CAPACITY (4 * 1024) 
 
@@ -50,17 +50,17 @@ size_t align_size(size_t size);
 
 void init_arena(ArenaAllocator* arena, size_t default_capacity);
 
-void* arena_alloc(ArenaAllocator* arena, size_t size);
-void* arena_realloc(ArenaAllocator* arena, void* ptr, size_t old_size, size_t new_size);
-void* arena_memset(void* ptr, int value, size_t len);
+void* arena_alloc(ArenaAllocator* arena, const size_t size);
+void* arena_realloc(ArenaAllocator* arena, void* ptr, const size_t old_size, const size_t new_size);
+void* arena_memset(void* ptr, const int value, size_t len);
 void* arena_memcpy(void* dest, const void* src, size_t len);
 char* arena_strdup(ArenaAllocator* arena, const char* str);
 
 void arena_reset(ArenaAllocator* arena);
 void arena_free(ArenaAllocator* arena); 
 
-size_t total_capacity(ArenaAllocator* arena);
-size_t total_usage(ArenaAllocator* arena); 
+size_t total_capacity(const ArenaAllocator* arena);
+size_t total_usage(const ArenaAllocator* arena); 
 
 #ifdef __cplusplus 
 }
