@@ -12,10 +12,6 @@ extern void* arena_realloc_avx2(ArenaAllocator* arena, void* ptr, const size_t o
 extern void* arena_memcpy_avx2(void* dest, const void* src, size_t len);
 extern void* arena_memset_avx2(void* ptr, int const value, size_t len);
 
-static void* (*arena_realloc_impl)(ArenaAllocator* arena, void* ptr, const size_t old_size, const size_t new_size);
-static void* (*arena_memcpy_impl)(void* dest, const void* src, size_t len);
-static void* (*arena_memset_impl)(void* ptr, const int value, size_t len);
-
 extern void* arena_realloc_sse2(ArenaAllocator* arena, void* ptr, const size_t old_size, const size_t new_size);
 extern void* arena_memcpy_sse2(void* dest, const void* src, size_t len);
 extern void* arena_memset_sse2(void* ptr, int const value, size_t len);
@@ -31,12 +27,10 @@ __attribute__((constructor)) static void arena_dispatch(void) {
         arena_realloc_impl = arena_realloc_avx2;
         arena_memcpy_impl = arena_memcpy_avx2;
         arena_memset_impl = arena_memset_avx2;
-        return;
     } else if (__builtin_cpu_supports("sse2")) {
         arena_realloc_impl = arena_realloc_sse2;
         arena_memcpy_impl = arena_memcpy_sse2;
         arena_memset_impl = arena_memset_sse2;
-        return;
     }
 }
 
