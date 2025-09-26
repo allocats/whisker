@@ -82,33 +82,39 @@ static inline void free_block(ArenaBlock* block) {
 }
 
 void* arena_alloc(ArenaAllocator* arena, const size_t size) {
-    ArenaBlock* current = arena -> end;
+    ArenaBlock* block = arena -> end;
+    if (UNLIKELY(!block)) {
+        block = new_block(arena -> default_capacity, size);
+        arena -> end = block;
+        arena -> start = arena -> end;
+    } 
 
-    if (UNLIKELY(!current)) {
-        current = new_block(arena -> default_capacity, size);
-        arena -> start = arena -> end = current;
+    const size_t usage = block -> usage;
+    const size_t capacity = block -> capacity;
+    const size_t available = capacity - usage;
 
-        void* result = (char*) current -> data + current -> usage;
-        current -> usage += size;
+    if (LIKELY(size <= available)) {
+        void* result = (char*) block -> data + usage;
+        block -> usage += size;
         return result;
     }
 
-    while (UNLIKELY(arena -> end -> usage + size > arena -> end -> capacity && arena -> end -> next != NULL)) {
-        arena -> end = arena -> end -> next;
-    } 
-
-    if (UNLIKELY(arena -> end -> usage + size > arena -> end -> capacity)) {
-            ArenaBlock* block = new_block(arena -> default_capacity, size);
-            arena -> end -> next = block;
-            arena -> end = block;
+    ArenaBlock* next = block -> next;
+    while (next && next -> usage + size > next -> capacity) {
+        next = next -> next;
     }
 
-    void* result = (char*) arena -> end -> data + arena -> end -> usage;
-    arena -> end -> usage += size;
+    if (!next) {
+        next = new_block(arena -> default_capacity, size);
+        block -> next = next;
+    }
+
+    arena -> end = next;
+
+    void* result = (char*) next -> data + next -> usage;
+    next -> usage += size;
     return result;
 }
-
-
 
 char* arena_strdup(ArenaAllocator* arena, const char* str) {
     const size_t len = strlen(str);
@@ -124,6 +130,7 @@ inline void arena_reset(ArenaAllocator* arena) {
     for (ArenaBlock* block = arena -> start; block != NULL; block = block -> next) {
         block -> usage = 0;
     }
+
     arena -> end = arena -> start;
 }
 

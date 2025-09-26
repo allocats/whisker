@@ -2,6 +2,6 @@
 
 mkdir -p build/bin/
 
-clang src/main.c lib/libarena.a -o build/bin/main
+clang -Weverything src/main.c lib/libarena.a -o build/bin/main
 
 ./build/bin/main
